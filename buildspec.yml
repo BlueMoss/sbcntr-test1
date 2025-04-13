@@ -4,18 +4,17 @@ env:
     variables:
         AWS_REGION_NAME: ap-northeast-2
         ECR_REPOSITORY_NAME: sbcntr-backend
-        CONTAINER_NAME: app
         DOCKER_BUILDKIT: "1"
     
 phases:
     install:
         runtime-versions:  
-            docker: 20
+            docker: 19
 
     pre_build:
         commands:
             - AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
-            - aws ecr --region ap-northeast-2 get-login-password | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-northeast-2.amazonaws.com/sbcntr-backend
+            - aws ecr --region ap-northeast-2 get-login-password | docker login --username AWS --password-stdin https://${AWS_ACCOUNT_ID}.dkr.ecr.ap-northeast-2.amazonaws.com/sbcntr-backend
             - REPOSITORY_URI=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION_NAME}.amazonaws.com/${ECR_REPOSITORY_NAME}
             # 태그 이름에 Git 커밋 해시를 이용
             - IMAGE_TAG=$(echo ${CODEBUILD_RESOLVED_SOURCE_VERSION} | cut -c 1-7)
@@ -25,9 +24,9 @@ phases:
     post_build:
         commands:
             - docker image push ${REPOSITORY_URI}:${IMAGE_TAG}
-            - echo '[{"name":"'"$CONTAINER_NAME"'","imageUri":"'"$REPOSITORY_URI:$IMAGE_TAG"'"}]' > imagedefinitions.json
+            - printf '{"name":"%s","ImageURI":"%s"}' $ECR_REPOSITORY_NAME $REPOSITORY_URI:$IMAGE_TAG > imageDetail.json
+
 artifacts:
     files:
-        - imagedefinitions.json
-
+        - imageDetail.json
 
