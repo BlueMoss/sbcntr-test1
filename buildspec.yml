@@ -4,6 +4,7 @@ env:
     variables:
         AWS_REGION_NAME: ap-northeast-2
         ECR_REPOSITORY_NAME: sbcntr-backend
+        CONTAINER_NAME: app
         DOCKER_BUILDKIT: "1"
     
 phases:
@@ -24,9 +25,9 @@ phases:
     post_build:
         commands:
             - docker image push ${REPOSITORY_URI}:${IMAGE_TAG}
-            - echo '[{"name":"'"$CONTAINER_NAME"'","ImageURI":"'"$REPOSITORY_URI:$IMAGE_TAG"'"}]' > imageDetail.json
-
+            - echo '[{"name":"'"$CONTAINER_NAME"'","imageUri":"'"$REPOSITORY_URI:$IMAGE_TAG"'"}]' > imagedefinitions.json
 artifacts:
     files:
-        - imageDetail.json
+        - imagedefinitions.json
+
 
